@@ -11,9 +11,11 @@ body {
     background: #f1f5f9;
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    gap: 16px;
 }
 .card {
     background: white;
@@ -60,6 +62,24 @@ body {
     letter-spacing: 0.05em;
     text-transform: uppercase;
 }
+.btns {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 360px;
+}
+.btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+}
+.btn-guardar { background: #1a338a; color: white; }
+.btn-partilhar { background: #25D366; color: white; }
 .err {
     text-align: center;
     color: #c62828;
@@ -70,77 +90,126 @@ body {
 </head>
 <body>
 <div id="root"></div>
+<div class="btns" id="btns" style="display:none;">
+    <button class="btn btn-guardar" onclick="guardarImagem()">&#128190; Guardar</button>
+    <button class="btn btn-partilhar" onclick="partilharImagem()">&#8679; Partilhar</button>
+</div>
 
 <script>
 (function() {
-    const params = new URLSearchParams(window.location.search);
-    const s   = params.get('s')   || '-';
-    const sn  = params.get('sn')  || '-';
-    const n   = params.get('n')   || '-';
-    const ip  = params.get('ip')  || '-';
+    var params = new URLSearchParams(window.location.search);
+    var s  = params.get('s')  || '-';
+    var sn = params.get('sn') || '-';
+    var n  = params.get('n')  || '-';
+    var ip = params.get('ip') || '-';
 
-    const root = document.getElementById('root');
+    var root = document.getElementById('root');
 
     if (s === '-' && sn === '-') {
         root.innerHTML = '<div class="err">Sem dados para mostrar.</div>';
         return;
     }
 
-    root.innerHTML = `
-        <div>
-            <div class="header">COMETLIS &bull; DSACF &bull; SSIC</div>
-            <div class="card">
-                <div class="qr-wrap" id="qr"></div>
-                <div class="info">
-                    <div class="field">
-                        <span class="lbl">SSI</span>
-                        <span class="val">${s}</span>
-                    </div>
-                    <div class="field">
-                        <span class="lbl">N&ordm; S&eacute;rie</span>
-                        <span class="val">${sn}</span>
-                    </div>
-                    <div class="field">
-                        <span class="lbl">Nomenclatura</span>
-                        <span class="val">${n}</span>
-                    </div>
-                    <div class="field">
-                        <span class="lbl">IP</span>
-                        <span class="val">${ip}</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+    document.getElementById('btns').style.display = 'flex';
 
-    // Gerar QR code com os dados
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    script.onload = function() {
-        const wrap = document.getElementById('qr');
-        const qr = new QRCode(document.createElement('div'), {
-            text: `${s}|${sn}|${n}|${ip}`,
-            width: 130, height: 130,
-            colorDark: '#000000', colorLight: '#ffffff',
+    root.innerHTML =
+        '<div style="width:100%;max-width:360px;">' +
+            '<div class="header">COMETLIS &bull; DSACF &bull; SSIC</div>' +
+            '<div class="card" id="etiqueta">' +
+                '<div class="qr-wrap" id="qr"></div>' +
+                '<div class="info">' +
+                    '<div class="field"><span class="lbl">SSI</span><span class="val">' + s + '</span></div>' +
+                    '<div class="field"><span class="lbl">N&ordm; S&eacute;rie</span><span class="val">' + sn + '</span></div>' +
+                    '<div class="field"><span class="lbl">Nomenclatura</span><span class="val">' + n + '</span></div>' +
+                    '<div class="field"><span class="lbl">IP</span><span class="val">' + ip + '</span></div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    // Carregar qrcodejs e gerar QR no canvas
+    var s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s1.onload = function() {
+        var wrap = document.getElementById('qr');
+        var qr = new QRCode(document.createElement('div'), {
+            text: window.location.href,
+            width: 130,
+            height: 130,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.H
         });
-        const mat = qr._oQRCode;
+        var mat = qr._oQRCode;
         if (!mat) return;
-        const cv = document.createElement('canvas');
-        cv.width = 130; cv.height = 130;
-        const ctx = cv.getContext('2d');
-        const nm = mat.getModuleCount();
-        const cell = Math.floor(130 / nm);
-        const off  = Math.floor((130 - cell * nm) / 2);
-        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 130, 130);
+        var cv = document.createElement('canvas');
+        cv.width = 130;
+        cv.height = 130;
+        var ctx = cv.getContext('2d');
+        var nm = mat.getModuleCount();
+        var cell = Math.floor(130 / nm);
+        var off  = Math.floor((130 - cell * nm) / 2);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, 130, 130);
         ctx.fillStyle = '#000';
-        for (let r = 0; r < nm; r++)
-            for (let c = 0; c < nm; c++)
-                if (mat.isDark(r, c))
+        for (var r = 0; r < nm; r++) {
+            for (var c = 0; c < nm; c++) {
+                if (mat.isDark(r, c)) {
                     ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
+                }
+            }
+        }
         wrap.appendChild(cv);
     };
-    document.head.appendChild(script);
+    document.head.appendChild(s1);
+
+    // Carregar html2canvas para geração de imagem
+    var s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(s2);
 })();
+
+async function gerarCanvas() {
+    if (typeof html2canvas === 'undefined') {
+        alert('A carregar, tenta novamente daqui a um momento.');
+        return null;
+    }
+    return await html2canvas(document.getElementById('etiqueta'), {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        useCORS: true
+    });
+}
+
+async function guardarImagem() {
+    var canvas = await gerarCanvas();
+    if (!canvas) return;
+    var s = new URLSearchParams(window.location.search).get('s') || 'eq';
+    var link = document.createElement('a');
+    link.download = 'etiqueta_SSI_' + s + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+async function partilharImagem() {
+    var canvas = await gerarCanvas();
+    if (!canvas) return;
+    var s = new URLSearchParams(window.location.search).get('s') || 'eq';
+    canvas.toBlob(async function(blob) {
+        var file = new File([blob], 'etiqueta_SSI_' + s + '.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    title: 'Equipamento SSI ' + s,
+                    files: [file]
+                });
+            } catch(e) {
+                window.open(URL.createObjectURL(blob), '_blank');
+            }
+        } else {
+            window.open(URL.createObjectURL(blob), '_blank');
+        }
+    }, 'image/png');
+}
 </script>
 </body>
 </html>
