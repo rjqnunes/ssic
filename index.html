@@ -80,21 +80,30 @@ body {
 }
 .btn-guardar { background: #1a338a; color: white; }
 .btn-partilhar { background: #25D366; color: white; }
-.err {
-    text-align: center;
-    color: #c62828;
-    font-size: 14px;
-    padding: 2rem;
-}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<div class="btns" id="btns" style="display:none;">
+
+<div style="width:100%;max-width:360px;">
+    <div class="header">COMETLIS &bull; DSACF &bull; SSIC</div>
+    <div class="card" id="etiqueta">
+        <div class="qr-wrap" id="qr"></div>
+        <div class="info">
+            <div class="field"><span class="lbl">SSI</span><span class="val" id="v-s">-</span></div>
+            <div class="field"><span class="lbl">N&ordm; S&eacute;rie</span><span class="val" id="v-sn">-</span></div>
+            <div class="field"><span class="lbl">Nomenclatura</span><span class="val" id="v-n">-</span></div>
+            <div class="field"><span class="lbl">IP</span><span class="val" id="v-ip">-</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="btns">
     <button class="btn btn-guardar" onclick="guardarImagem()">&#128190; Guardar</button>
     <button class="btn btn-partilhar" onclick="partilharImagem()">&#8679; Partilhar</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 (function() {
     var params = new URLSearchParams(window.location.search);
@@ -103,33 +112,12 @@ body {
     var n  = params.get('n')  || '-';
     var ip = params.get('ip') || '-';
 
-    var root = document.getElementById('root');
+    document.getElementById('v-s').textContent  = s;
+    document.getElementById('v-sn').textContent = sn;
+    document.getElementById('v-n').textContent  = n;
+    document.getElementById('v-ip').textContent = ip;
 
-    if (s === '-' && sn === '-') {
-        root.innerHTML = '<div class="err">Sem dados para mostrar.</div>';
-        return;
-    }
-
-    document.getElementById('btns').style.display = 'flex';
-
-    root.innerHTML =
-        '<div style="width:100%;max-width:360px;">' +
-            '<div class="header">COMETLIS &bull; DSACF &bull; SSIC</div>' +
-            '<div class="card" id="etiqueta">' +
-                '<div class="qr-wrap" id="qr"></div>' +
-                '<div class="info">' +
-                    '<div class="field"><span class="lbl">SSI</span><span class="val">' + s + '</span></div>' +
-                    '<div class="field"><span class="lbl">N&ordm; S&eacute;rie</span><span class="val">' + sn + '</span></div>' +
-                    '<div class="field"><span class="lbl">Nomenclatura</span><span class="val">' + n + '</span></div>' +
-                    '<div class="field"><span class="lbl">IP</span><span class="val">' + ip + '</span></div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-
-    // Carregar qrcodejs e gerar QR no canvas
-    var s1 = document.createElement('script');
-    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    s1.onload = function() {
+    window.addEventListener('load', function() {
         var wrap = document.getElementById('qr');
         var qr = new QRCode(document.createElement('div'), {
             text: window.location.href,
@@ -159,18 +147,12 @@ body {
             }
         }
         wrap.appendChild(cv);
-    };
-    document.head.appendChild(s1);
-
-    // Carregar html2canvas para geração de imagem
-    var s2 = document.createElement('script');
-    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    document.head.appendChild(s2);
+    });
 })();
 
 async function gerarCanvas() {
     if (typeof html2canvas === 'undefined') {
-        alert('A carregar, tenta novamente daqui a um momento.');
+        alert('A carregar, tenta novamente.');
         return null;
     }
     return await html2canvas(document.getElementById('etiqueta'), {
@@ -198,10 +180,7 @@ async function partilharImagem() {
         var file = new File([blob], 'etiqueta_SSI_' + s + '.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
-                await navigator.share({
-                    title: 'Equipamento SSI ' + s,
-                    files: [file]
-                });
+                await navigator.share({ title: 'Equipamento SSI ' + s, files: [file] });
             } catch(e) {
                 window.open(URL.createObjectURL(blob), '_blank');
             }
