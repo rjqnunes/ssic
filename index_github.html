@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipamento SSIC</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.card {
+    background: white;
+    border: 2.5px solid #1a338a;
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+}
+.qr-wrap {
+    width: 130px;
+    height: 130px;
+    flex-shrink: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.info { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 2px; }
+.lbl {
+    font-size: 9px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.val {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    word-break: break-all;
+}
+.header {
+    text-align: center;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.err {
+    text-align: center;
+    color: #c62828;
+    font-size: 14px;
+    padding: 2rem;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const s   = params.get('s')   || '-';
+    const sn  = params.get('sn')  || '-';
+    const n   = params.get('n')   || '-';
+    const ip  = params.get('ip')  || '-';
+
+    const root = document.getElementById('root');
+
+    if (s === '-' && sn === '-') {
+        root.innerHTML = '<div class="err">Sem dados para mostrar.</div>';
+        return;
+    }
+
+    root.innerHTML = `
+        <div>
+            <div class="header">COMETLIS &bull; DSACF &bull; SSIC</div>
+            <div class="card">
+                <div class="qr-wrap" id="qr"></div>
+                <div class="info">
+                    <div class="field">
+                        <span class="lbl">SSI</span>
+                        <span class="val">${s}</span>
+                    </div>
+                    <div class="field">
+                        <span class="lbl">N&ordm; S&eacute;rie</span>
+                        <span class="val">${sn}</span>
+                    </div>
+                    <div class="field">
+                        <span class="lbl">Nomenclatura</span>
+                        <span class="val">${n}</span>
+                    </div>
+                    <div class="field">
+                        <span class="lbl">IP</span>
+                        <span class="val">${ip}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    // Gerar QR code com os dados
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = function() {
+        const wrap = document.getElementById('qr');
+        const qr = new QRCode(document.createElement('div'), {
+            text: `${s}|${sn}|${n}|${ip}`,
+            width: 130, height: 130,
+            colorDark: '#000000', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        const mat = qr._oQRCode;
+        if (!mat) return;
+        const cv = document.createElement('canvas');
+        cv.width = 130; cv.height = 130;
+        const ctx = cv.getContext('2d');
+        const nm = mat.getModuleCount();
+        const cell = Math.floor(130 / nm);
+        const off  = Math.floor((130 - cell * nm) / 2);
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 130, 130);
+        ctx.fillStyle = '#000';
+        for (let r = 0; r < nm; r++)
+            for (let c = 0; c < nm; c++)
+                if (mat.isDark(r, c))
+                    ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
+        wrap.appendChild(cv);
+    };
+    document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>
